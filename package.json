@@ -1,0 +1,20 @@
+{
+    "name": "my-nodejs-app",
+    "version": "1.0.0",
+    "description": "Mohsin Node.js app",
+    "main": "app.js",
+    "scripts": {
+      "start": "node app.js",
+      "test": "jest"
+    },
+    "author": "Mohsin-424",
+    "license": "ISC",
+    "dependencies": {
+      "express": "^4.18.2"
+    },
+    "devDependencies": {
+      "jest": "^29.6.1",
+      "supertest": "^6.3.3"
+    }
+  }
+  

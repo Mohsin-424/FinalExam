@@ -1,30 +1,54 @@
 pipeline {
     agent any
 
+    environment {
+        APP_PATH = '/path/to/your/app'
+        REMOTE_SERVER = 'your-server-ip'
+        REMOTE_USER = 'your-username'
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
-                // Cloning the Git repository containing Jenkinsfile and index.html
-                git branch: 'main', url: 'https://github.com/saadbhatti763/jenkins_demo.git'
+                git 'https://github.com/Mohsin-424/FinalExam.git'  // Replace with your GitHub repository URL
             }
         }
 
-        stage('Copy Files to /var/www/html') {
+        stage('Install Dependencies') {
             steps {
-                // Copy Jenkinsfile and index.html to /var/www/html using sudo without password prompt
-                sh '''
-                sudo cp -r Jenkinsfile index.html /var/www/html/
-                '''
+                script {
+                    sh 'pip install -r requirements.txt'
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    echo 'No tests added yet'
+                }
+            }
+        }
+
+        stage('Deploy to Server') {
+            steps {
+                script {
+                    // Transfer the app to the server using SCP
+                    sh "scp -r ./ user@${REMOTE_SERVER}:${APP_PATH}"
+
+                    // SSH into the server to deploy
+                    sh "ssh ${REMOTE_USER}@${REMOTE_SERVER} 'cd ${APP_PATH} && pip install -r requirements.txt && gunicorn -w 4 app:app --bind 0.0.0.0:5000 &'"
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'Deployment Successful!'
+            echo 'Deployment completed successfully!'
         }
         failure {
-            echo 'Deployment Failed.'
+            echo 'Deployment failed!'
         }
     }
 }

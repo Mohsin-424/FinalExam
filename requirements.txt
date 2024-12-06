@@ -1,5 +1,5 @@
-numpy 
-Flask
-scikit-learn
-joblib
-
+8. Requirements file content:
+Flask==2.2.2
+scikit-learn==1.2.0
+numpy==1.24.0
+Werkzeug==2.2.3

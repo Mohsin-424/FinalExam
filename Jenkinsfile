@@ -1,54 +1,67 @@
 pipeline {
     agent any
-
     environment {
-        APP_PATH = '/path/to/your/app'
-        REMOTE_SERVER = 'your-server-ip'
-        REMOTE_USER = 'your-username'
+        DOCKER_IMAGE = "finalexam-ml-model" // Docker image name
+        CONTAINER_NAME = "finalexam-ml-model-container" // Docker container name
+        GITHUB_REPO = "https://github.com/Mohsin-424/FinalExam.git" // Repository URL
     }
-
     stages {
+        // Clone the Git Repository
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/Mohsin-424/FinalExam.git'  // Replace with your GitHub repository URL
+                git branch: 'main', url: "${GITHUB_REPO}" // Pull code from the main branch
             }
         }
 
-        stage('Install Dependencies') {
+        // Build the Docker Image
+        stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'pip install -r requirements.txt'
+                    echo "Building Docker Image: ${DOCKER_IMAGE}"
+                    // Ensure the Dockerfile and app.py are in the root directory
+                    sh 'docker build -t $DOCKER_IMAGE .' // Adjust the context path if needed
                 }
             }
         }
 
-        stage('Run Tests') {
+        // Deploy using Terraform
+        stage('Deploy with Terraform') {
             steps {
                 script {
-                    echo 'No tests added yet'
+                    echo "Deploying infrastructure using Terraform..."
+                    sh '''
+                    cd terraform
+                    terraform init
+                    terraform apply -auto-approve
+                    '''
                 }
             }
         }
 
-        stage('Deploy to Server') {
+        // Test the Deployment
+        stage('Test Deployment') {
             steps {
                 script {
-                    // Transfer the app to the server using SCP
-                    sh "scp -r ./ user@${REMOTE_SERVER}:${APP_PATH}"
-
-                    // SSH into the server to deploy
-                    sh "ssh ${REMOTE_USER}@${REMOTE_SERVER} 'cd ${APP_PATH} && pip install -r requirements.txt && gunicorn -w 4 app:app --bind 0.0.0.0:5000 &'"
+                    echo "Testing the deployment..."
+                    // Adding a delay to ensure container starts properly
+                    sh '''
+                    sleep 10 # Wait for the container to start
+                    curl -X POST http://localhost:5000/predict -H "Content-Type: application/json" -d '{"features": [2]}'
+                    '''
                 }
             }
         }
     }
 
     post {
+        always {
+            echo 'Pipeline execution completed.'
+        }
         success {
-            echo 'Deployment completed successfully!'
+            echo 'Deployment successful!'
         }
         failure {
-            echo 'Deployment failed!'
+            echo 'Pipeline failed. Check the logs for errors.'
         }
     }
 }
